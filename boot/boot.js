@@ -1107,10 +1107,47 @@ Wiki constructor. State is stored in private members that only a small number of
 options include:
 enableIndexers - Array of indexer names to enable, or null to use all available indexers
 */
+
+var tiddlersProxy = {
+	get(target, prop, receiver) {
+		if (prop === "TestTiddler") {
+			let newTid = {
+                "fields": {
+                    "created": new Date(),
+                    "modified": new Date(),
+                    "title": "TestTiddler",
+                    "type": "text/vnd.tiddlywiki",
+                    "text": "!! Hello from tiddlersProxy.get!"
+                },
+            };
+            Object.setPrototypeOf(newTid, $tw.Tiddler.prototype)
+            // console.log("Retrieving " + title + ": " + JSON.stringify(tid));
+			console.log("Proxying TestTiddler");
+            return newTid;
+		}
+		if (prop === "GhostTiddler") {
+			let newTid = {
+                "fields": {
+                    "created": new Date(),
+                    "modified": new Date(),
+                    "title": "GhostTiddler",
+                    "type": "text/vnd.tiddlywiki",
+                    "text": "!! Boo!"
+                },
+            };
+            Object.setPrototypeOf(newTid, $tw.Tiddler.prototype)
+            // console.log("Retrieving " + title + ": " + JSON.stringify(tid));
+			console.log("Proxying GhostTiddler");
+            return newTid;
+		}
+		return Reflect.get(...arguments);
+	},
+};
+
 $tw.Wiki = function(options) {
 	options = options || {};
 	var self = this,
-		tiddlers = Object.create(null), // Hashmap of tiddlers
+		tiddlers = new Proxy(Object.create(null), tiddlersProxy), // Hashmap of tiddlers
 		tiddlerTitles = null, // Array of tiddler titles
 		getTiddlerTitles = function() {
 			if(!tiddlerTitles) {
